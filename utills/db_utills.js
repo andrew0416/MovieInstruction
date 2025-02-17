@@ -3,16 +3,20 @@ const { query } = require("express");
 genreArray = ['판타지', '액션', '로맨스', 'SF', '스릴러']
 
 function postMovie(req, db){
-    let movie = req.body
-    db.query(`INSERT INTO items (title, author ,year, genre, summary)
-    VALUES ('${movie.title}', '${movie.author}', ${movie.year}, ${movie.genre}, '${movie.summary}');`, (err, rows) => {
-        if (err) {
-            console.error('Error inserting movie:', err);
-            return;
-        } 
-        console.log(`${movie.title}이 등록되었습니다.`);
-        console.log(rows);
+    return new Promise((resolve, reject) => {
+        let movie = req.body
+        db.query(`INSERT INTO items (title, author ,year, genre, summary)
+        VALUES ('${movie.title}', '${movie.author}', ${movie.year}, ${movie.genre}, '${movie.summary}');`, (err, rows) => {
+            if (err) {
+                console.error('Error inserting movie:', err);
+                reject('Error fetching data');
+                return;
+            } 
+            console.log(`${movie.title}이 등록되었습니다.`);
+            resolve(true);
+        });
     });
+    
 }
 
 function putMovie(req, db, id){
