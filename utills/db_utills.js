@@ -1,5 +1,7 @@
 const { query } = require("express");
 
+genreArray = ['판타지', '액션', '로맨스', 'SF', '스릴러']
+
 function postMovie(req, db){
     let movie = req.body
     db.query(`INSERT INTO items (title, author ,year, genre, summary)
@@ -47,10 +49,18 @@ function putMovie(req, db, id){
 
 
 
-function getMovie(db){
+function getMovie(db, params){
     return new Promise((resolve, reject) => {
+        console.log(params);
         let txt =  "List\n---\n"
-        db.query("SELECT id, title From items", (err, rows) => {
+
+        whereString = getFilter(params)
+        if (whereString != ""){
+            whereString = " WHERE " + whereString
+        }
+        console.log(whereString);
+
+        db.query("SELECT id, title From items"+whereString, (err, rows) => {
 
             if (err) {
                 console.error('Error fetching data:', err);
@@ -70,6 +80,30 @@ function getMovie(db){
 
         });
     });
+}
+
+function getFilter(params) {
+    let arr = [];
+
+    if (params.t) { // 제목 매칭
+        arr.push(`title like '%${params.t}%'`);
+    }
+    if (params.a) { // 작가 매칭
+        arr.push(`author like '%${params.a}%'`);
+    }
+    if (params.y) { // 연도 일치
+        arr.push(`year = ${parseInt(params.y)}`);
+    }
+    if (params.g) { // 장르 포함
+        let idx = genreArray.indexOf(params.g);
+        if (idx !== -1) {
+            let gCode = Math.pow(2, idx);
+            console.log(gCode)
+            arr.push(`(genre & ${gCode}) = ${gCode}`);
+        }
+    }
+    console.log(arr.join(" AND "))
+    return arr.join(" AND "); // 조건들을 "AND"로 연결해서 반환
 }
 
 function getMovieDetail(db, id){

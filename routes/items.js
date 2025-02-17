@@ -10,7 +10,8 @@ db.connect();
 // 영화 조회
 router.get('/', async (req, res, next) => {
   try {
-    let screen = await dbUtills.getMovie(db)
+    let params = req.query
+    let screen = await dbUtills.getMovie(db, params)
     res.send(screen);
   } catch (error) {
 
@@ -49,7 +50,6 @@ router.put('/:id', async (req, res) => {
   try {
     let id = parseInt(req.params.id)
     let valid  = await dbUtills.putMovie(req, db, id)
-    console.log(valid)
     if (valid){  
       let screen = await dbUtills.getMovieDetail(db, id)
       res.json(screen)
