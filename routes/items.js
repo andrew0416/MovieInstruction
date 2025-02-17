@@ -21,9 +21,10 @@ router.get('/', async (req, res, next) => {
 
 // 영화 등록
 router.post('/', async (req, res) => {
-  dbUtills.postMovie(req, db)
   try {
-    let screen = await dbUtills.getMovie(db)
+    await dbUtills.postMovie(req, db)
+    let params = req.query
+    let screen = await dbUtills.getMovie(db, params)
     res.send(screen);
   } catch (error) {
   }
