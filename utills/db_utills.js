@@ -1,7 +1,8 @@
 const { query } = require("express");
 
-genreArray = ['판타지', '액션', '로맨스', 'SF', '스릴러']
+let genreArray = ['판타지', '액션', '로맨스', 'SF', '스릴러']
 
+// movie
 function postMovie(req, db){
     return new Promise((resolve, reject) => {
         let movie = req.body
@@ -51,14 +52,12 @@ function putMovie(req, db, id){
     });
 }
 
-
-
 function getMovie(db, params){
     return new Promise((resolve, reject) => {
         console.log(params);
         let txt =  "List\n---\n"
 
-        whereString = getFilter(params)
+        whereString = genreFilter(params)
         if (whereString != ""){
             whereString = " WHERE " + whereString
         }
@@ -86,7 +85,7 @@ function getMovie(db, params){
     });
 }
 
-function getFilter(params) {
+function genreFilter(params) {
     let arr = [];
 
     if (params.t) { // 제목 매칭
@@ -132,18 +131,14 @@ function deleteMovie(db, id){
     return new Promise((resolve, reject) => {
         db.query(`SELECT * From items WHERE id=${id}`, (err, rows) => {
             if (err) {
-                console.error('Error fetching data:', err);
-                reject('Error fetching data');
-                return;
+                reject(err.code);
             }
             if (rows.length === 0){
-                resolve(false)
+                reject('잘못된 요청')
             } else {
                 db.query(`DELETE From items WHERE id=${id}`, (err, rows) =>{
                     if (err) {
-                        console.error('Error fetching data:', err);
-                        reject('Error fetching data');
-                        return;
+                        reject(err.code)
                     }
                     resolve(true)
                 });
@@ -154,4 +149,68 @@ function deleteMovie(db, id){
     
 }
 
-module.exports = { postMovie, putMovie ,getMovie, getMovieDetail, deleteMovie };
+// user
+function postJoin(req, db){
+    return new Promise((resolve, reject) => {
+        let user = req.body
+        db.query(`INSERT INTO users (id, password ,nickname)
+        VALUES (\'${user.id}\', \'${user.password}\', \'${user.nickname}\');`, (err, rows) => {
+            console.log(rows)
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    console.error('실패: 아이디 중복');
+                    reject('아이디 중복');
+                } else {
+                    reject(err.code);
+                }
+                return;
+            } 
+            console.log(`${user.id}이 등록되었습니다.`);
+            resolve(true);
+        });
+    });
+}
+
+function postLogin(req, db){
+    return new Promise((resolve, reject) => {
+        let user = req.body
+        db.query(`SELECT COUNT(*) as cnt FROM users WHERE id='${user.id}'`, (err, rows) => {
+            if (err) {
+                reject(err.code);
+            }
+            if (rows[0].cnt == 1){
+                db.query(`SELECT password, nickname FROM users WHERE id='${user.id}'`, (err, rows) =>{
+                    if (err) {
+                        reject(err.code);
+                    }
+                    if (rows[0].password == user.password) {
+                        resolve(rows[0].nickname)
+                    } else {
+                        reject('비밀번호 다름');
+                    }
+                    
+                });
+            } else {
+                reject('아이디 없음');
+            }
+        });
+    });
+}
+
+function getUserDetail(db, id){
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT * From users WHERE id='${id}'`, (err, rows) => {
+            if (err) {
+                reject(err.code);
+            }
+            if (rows.length === 0){
+                reject('아이디 없음');
+            } else {
+                resolve(`${rows[0].nickname}님의 페이지입니다.`)
+            }
+        });
+    });
+}
+
+
+module.exports = { postMovie, putMovie ,getMovie, getMovieDetail, deleteMovie, postJoin, postLogin, getUserDetail};
