@@ -10,6 +10,7 @@ var itemsRouter = require('./routes/items');
 
 var loginRouter = require('./routes/login');
 var joinRouter = require('./routes/join');
+var collectionRouter = require('./routes/collections');
 
 var app = express();
 
@@ -28,6 +29,7 @@ app.use('/users', usersRouter);
 app.use('/items', itemsRouter);
 app.use('/login', loginRouter);
 app.use('/join', joinRouter);
+app.use('/collections', collectionRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
