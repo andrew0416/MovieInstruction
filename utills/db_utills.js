@@ -22,33 +22,18 @@ function postMovie(req, db){
 
 function putMovie(req, db, id){
     return new Promise((resolve, reject) => {
-        db.query(`SELECT * FROM items WHERE id=${id}`, (err, rows) => {
+        let movie = req.body
+        db.query(`UPDATE items SET title='${movie.title}', author='${movie.author}', year=${movie.year},genre=${movie.genre},summary='${movie.summary}' WHERE id=${id}`, (err, rows) => {
+
             if (err) {
-                console.error('Error fetching data:', err);
-                reject('Error fetching data');
+                reject(err);
                 return;
             }
-            
-            let movie = req.body
-            db.query(`UPDATE items SET title='${movie.title}', author='${movie.author}', year=${movie.year},genre=${movie.genre},summary='${movie.summary}' WHERE id=${id}`, (err, rows) => {
-
-                if (err) {
-                    console.error('Error fetching data:', err);
-                    reject('Error fetching data');
-                    return;
-                }
-
-                if ((rows.length === 0)){
-                    resolve(false);
-                }
-                console.log(`${movie.title}이 수정되었습니다.`);
-                console.log(rows);
-                console.log(true)
-                resolve(true);
-            });
-
+            if ((rows.length === 0)){
+                reject("존재하지 않는 영화");
+            }
+            resolve(true);
         });
-
     });
 }
 
@@ -113,12 +98,10 @@ function getMovieDetail(db, id){
     return new Promise((resolve, reject) => {
         db.query(`SELECT * From items WHERE id=${id}`, (err, rows) => {
             if (err) {
-                console.error('Error fetching data:', err);
-                reject('Error fetching data');
-                return;
+                reject(err);
             }
             if (rows.length === 0){
-                resolve(false)
+                reject("영화 없음");
             } else {
                 console.log(rows)
                 resolve(rows[0])
@@ -212,5 +195,89 @@ function getUserDetail(db, id){
     });
 }
 
+// collection
+function postCollection(req, db){
+    return new Promise((resolve, reject) => {
+        let collection = req.body
+        db.query(`INSERT INTO collections (name , uid)
+        VALUES (\'${collection.name}\', ${collection.uid});`, (err, rows) => {
+            console.log(rows)
+            if (err) {
+                    reject(err.code);
+            } 
+            console.log(`${collection.name} 콜렉션이 등록되었습니다.`);
+            resolve(collection.name);
+        });
+    });
+}
 
-module.exports = { postMovie, putMovie ,getMovie, getMovieDetail, deleteMovie, postJoin, postLogin, getUserDetail};
+function getCollections(db){
+    return new Promise((resolve, reject) => {
+        let txt =  "List\n---\n"
+        db.query("SELECT cid, name From collections", (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            const queryArray = rows.map(row => ({ cid: row.cid, name: row.name}));
+
+            queryArray.forEach( element => {
+            console.log('Element: ', element);
+            txt += `${element.cid}: ${element.name}\n`;});
+
+            resolve(txt);
+        });
+    });
+}
+
+function getCollectionDetail(db, cid){
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT * From collections WHERE cid=${cid}`, (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            if (rows.length === 0){
+                reject("잘못된 요청");
+            } else {
+                resolve(rows[0])
+            }
+        });
+    });
+}
+
+function putCollection(req, db, cid){
+    return new Promise((resolve, reject) => {
+        let collection = req.body
+        db.query(`UPDATE collections SET name='${collection.name}'`, (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(true);
+        });
+    });
+}
+
+function deleteCollection(db, cid){
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT * From collections WHERE cid=${cid}`, (err, rows) => {
+            if (err) {
+                reject(err.code);
+            }
+            if (rows.length === 0){
+                reject('잘못된 요청')
+            } else {
+                db.query(`DELETE From collections WHERE cid=${cid}`, (err, rows) =>{
+                    if (err) {
+                        reject(err.code)
+                    }
+                    resolve(true)
+                });
+            }
+        });
+    });
+    
+}
+
+module.exports = { postMovie, putMovie ,getMovie, getMovieDetail, deleteMovie, postJoin, postLogin, getUserDetail, postCollection, getCollections, getCollectionDetail, putCollection, deleteCollection};
