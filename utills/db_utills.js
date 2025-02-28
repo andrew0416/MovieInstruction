@@ -162,12 +162,12 @@ function postLogin(req, db){
                 reject(err.code);
             }
             if (rows[0].cnt == 1){
-                db.query(`SELECT password, nickname FROM users WHERE id='${user.id}'`, (err, rows) =>{
+                db.query(`SELECT uid, password, nickname FROM users WHERE id='${user.id}'`, (err, rows) =>{
                     if (err) {
                         reject(err.code);
                     }
                     if (rows[0].password == user.password) {
-                        resolve(rows[0].nickname)
+                        resolve(rows[0])
                     } else {
                         reject('비밀번호 다름');
                     }
